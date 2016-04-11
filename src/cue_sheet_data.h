@@ -10,9 +10,8 @@
 typedef struct {
   int ride_number;
   int cue_number;
-
   ride_t ride_list[];
-
+  cue_sheet_view_t view;
 } cue_sheet_data_t;
 
 float cue_sheet_data_get_distance(cue_sheet_data_t* data);
