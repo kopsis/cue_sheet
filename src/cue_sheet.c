@@ -1,19 +1,12 @@
 #include <pebble.h>
 #include "ride.h"
+#include "cue_sheet_data.h"
 
-#define PERSIST_RIDE_NUMBER 1
-#define PERSIST_CUE_NUMBER 2
+static const int16_t MARGIN = 8;
+static const int16_t ICON_DIMENSIONS = 48;
 
 static Window *window;
 static TextLayer *text_layer;
-
-// Indices into ride global data structures. These are synced to 
-// persistent storage.
-static int ride_number;
-static int cue_number;
-
-// Pointer to currently selected ride
-static ride_entry_ptr_t current_ride;
 
 // Global ride list from ride.c
 extern ride_t ride_list[];
@@ -24,31 +17,43 @@ static void update_cue(void) {
   persist_write_int(PERSIST_CUE_NUMBER, cue_number);
 }
 
+static void view_model_changed(struct cue_sheet_view_model *arg) {
+  cue_sheet_view_model *model = (cue_sheet_view_model *)arg;
+
+  cue_sheet_data_t *data = window_get_user_data(window);
+
+  text_layer_set_text(data->distance_layer, model->distance.text);
+  text_layer_set_text(data->description_layer, model->description);
+
+  // make sure to redraw (if no string pointer changed none of the layers would be dirty)
+  layer_mark_dirty(window_get_root_layer(window));
+}
+
 // SELECT button
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  ride_number++;
-  if (ride_list[ride_number].max_cue == 0) {
-    ride_number = 0;
-  }
-  persist_write_int(PERSIST_RIDE_NUMBER, ride_number);
-  current_ride = ride_list[ride_number].ride;
-  update_cue();
+  Window *window = (Window *)context;
+  cue_sheet_data_t* data = window_get_user_data(window);
+
+  cue_sheet_data_next_ride(data);
+  cue_sheet_view_update(data);
 }
 
 // UP button
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (cue_number > 0) {
-    cue_number--;
-    update_cue();
-  }
+  Window *window = (Window *)context;
+  cue_sheet_data_t* data = window_get_user_data(window);
+
+  cue_sheet_data_prev_cue(data);
+  cue_sheet_view_update(data);
 }
 
 // DOWN button
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (cue_number <= ride_list[ride_number].max_cue) {
-    cue_number++;
-    update_cue();
-  }
+  Window *window = (Window *)context;
+  cue_sheet_data_t* data = window_get_user_data(window);
+
+  cue_sheet_data_next_cue(data);
+  cue_sheet_view_update(data);
 }
 
 static void click_config_provider(void *context) {

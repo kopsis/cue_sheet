@@ -1,55 +1,23 @@
 #pragma once
 
 #include <pebble.h>
+#include "ride.h"
+#include "cue_sheet_view.h"
 
-struct WeatherAppMainWindowViewModel;
-
-typedef void (*WeatherAppMainWindowViewModelFunc)(struct WeatherAppMainWindowViewModel* model);
+#define PERSIST_CUE_NUMBER 1
+#define PERSIST_RIDE_NUMBER 2
 
 typedef struct {
-  WeatherAppMainWindowViewModelFunc announce_changed;
-  struct {
-    GColor top;
-    GColor bottom;
-    int32_t to_bottom_normalized;
-  } bg_color;
-  struct {
-    GDrawCommandImage *draw_command;
-    int32_t to_square_normalized;
-  } icon;
-  struct {
-    int16_t idx;
-    int16_t num;
-    char text[8];
-  } pagination;
-  char *description;
-} WeatherAppMainWindowViewModel;
+  int ride_number;
+  int cue_number;
 
-//! calls model's .announce_changed or does nothing if NULL
-void cue_sheet_main_window_view_model_announce_changed(WeatherAppMainWindowViewModel *model);
+  ride_t ride_list[];
 
-void weather_app_view_model_set_highlow(WeatherAppMainWindowViewModel *model, int16_t high, int16_t low);
+} cue_sheet_data_t;
 
-void weather_app_view_model_set_temperature(WeatherAppMainWindowViewModel *model, int16_t value);
-void weather_app_view_model_set_icon(WeatherAppMainWindowViewModel *model, GDrawCommandImage *image);
-
-WeatherDataViewNumbers weather_app_data_point_view_model_numbers(WeatherAppDataPoint *data_point);
-
-GDrawCommandImage *weather_app_data_point_create_icon(WeatherAppDataPoint *data_point);
-
-void weather_app_view_model_fill_strings_and_pagination(WeatherAppMainWindowViewModel *view_model, WeatherAppDataPoint *data_point);
-
-void weather_view_model_fill_numbers(WeatherAppMainWindowViewModel *model, WeatherDataViewNumbers numbers);
-
-void weather_app_view_model_fill_all(WeatherAppMainWindowViewModel *model, WeatherAppDataPoint *data_point);
-
-void weather_app_view_model_fill_colors(WeatherAppMainWindowViewModel *model, GColor color);
-
-void weather_app_view_model_deinit(WeatherAppMainWindowViewModel *model);
-
-GColor weather_app_data_point_color(WeatherAppDataPoint *data_point);
-
-int weather_app_num_data_points(void);
-
-WeatherAppDataPoint *weather_app_data_point_at(int idx);
-WeatherAppDataPoint *weather_app_data_point_delta(WeatherAppDataPoint *dp, int delta);
+float cue_sheet_data_get_distance(cue_sheet_data_t* data);
+char* cue_sheet_data_get_description(cue_sheet_data_t* data);
+void cue_sheet_data_next_cue(cue_sheet_data_t* data);
+void cue_sheet_data_prev_cue(cue_sheet_data_t* data);
+void cue_sheet_data_next_ride(cue_sheet_data_t* data);
+void cue_sheet_data_init(cue_sheet_data_t* data);
