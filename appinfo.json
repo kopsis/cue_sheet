@@ -8,7 +8,20 @@
     "longName": "Cue Sheet",
     "projectType": "native",
     "resources": {
-        "media": []
+        "media": [
+            {
+                "file": "data/arrow-left-peb.pdc",
+                "name": "ICON_ARROW_LEFT",
+                "targetPlatforms": null,
+                "type": "raw"
+            },
+            {
+                "file": "data/arrow-right-peb.pdc",
+                "name": "ICON_ARROW_RIGHT",
+                "targetPlatforms": null,
+                "type": "raw"
+            }
+        ]
     },
     "sdkVersion": "3",
     "shortName": "Cue Sheet",

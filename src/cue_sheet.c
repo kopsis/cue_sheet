@@ -6,27 +6,22 @@ static const int16_t MARGIN = 8;
 static const int16_t ICON_DIMENSIONS = 48;
 
 static Window *window;
-static TextLayer *text_layer;
 
 // Global ride list from ride.c
 extern ride_t ride_list[];
 
-// Display the current cue sheet item
-static void update_cue(void) {
-  text_layer_set_text(text_layer, current_ride[PERSIST_CUE_NUMBER].cue);
-  persist_write_int(PERSIST_CUE_NUMBER, cue_number);
+static void bg_update_proc(Layer *layer, GContext *ctx) {
+  const GRect bounds = layer_get_bounds(layer);
+
+  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 }
 
-static void view_model_changed(struct cue_sheet_view_model *arg) {
-  cue_sheet_view_model *model = (cue_sheet_view_model *)arg;
-
+static void icon_layer_update_proc(Layer *layer, GContext *ctx) {
   cue_sheet_data_t *data = window_get_user_data(window);
-
-  text_layer_set_text(data->distance_layer, model->distance.text);
-  text_layer_set_text(data->description_layer, model->description);
-
-  // make sure to redraw (if no string pointer changed none of the layers would be dirty)
-  layer_mark_dirty(window_get_root_layer(window));
+  cue_sheet_view_t *view = &(data->view);
+  graphics_context_set_antialiased(ctx, true);
+  gdraw_command_image_draw(ctx, view->icon, GPoint(0, 0));
 }
 
 // SELECT button
@@ -35,7 +30,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
   cue_sheet_data_t* data = window_get_user_data(window);
 
   cue_sheet_data_next_ride(data);
-  cue_sheet_view_update(data);
+  cue_sheet_view_update(window, data);
 }
 
 // UP button
@@ -44,7 +39,7 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
   cue_sheet_data_t* data = window_get_user_data(window);
 
   cue_sheet_data_prev_cue(data);
-  cue_sheet_view_update(data);
+  cue_sheet_view_update(window, data);
 }
 
 // DOWN button
@@ -53,7 +48,7 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
   cue_sheet_data_t* data = window_get_user_data(window);
 
   cue_sheet_data_next_cue(data);
-  cue_sheet_view_update(data);
+  cue_sheet_view_update(window, data);
 }
 
 static void click_config_provider(void *context) {
@@ -79,19 +74,35 @@ static GRect init_text_layer(Layer *parent_layer, TextLayer **text_layer, int16_
 
 static void window_load(Window *window) {
   cue_sheet_data_t *data = window_get_user_data(window);
-  data->view_model.announce_changed = view_model_changed;
 
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
+  layer_set_update_proc(window_layer, bg_update_proc);
 
-  text_layer = text_layer_create(GRect(0, 72, bounds.size.w, 20));
-  text_layer_set_text(text_layer, "Press a button");
-  text_layer_set_text_alignment(text_layer, GTextAlignmentCenter);
-  layer_add_child(window_layer, text_layer_get_layer(text_layer));
+  const int16_t narrow_buffer = 5; // current whitespacing would trim 3-digit temperature otherwise
+  const int16_t narrow = ICON_DIMENSIONS + 2 - narrow_buffer;
+
+  const int16_t distance_top = 49;
+  init_text_layer(window_layer, &(data->view.distance_layer), distance_top, 40, narrow, FONT_KEY_LECO_38_BOLD_NUMBERS);
+
+  const int16_t description_top = 108;
+  const int16_t description_height = bounds.size.h - description_top;
+  init_text_layer(window_layer, &(data->view.description_layer), description_top, description_height, 0, FONT_KEY_GOTHIC_24_BOLD);
+  
+  GRect icon_rect = GRect(0, 0, ICON_DIMENSIONS, ICON_DIMENSIONS);
+  GRect alignment_rect = GRect(0, distance_top + 10, bounds.size.w - MARGIN, 10);
+  grect_align(&icon_rect, &alignment_rect, GAlignTopRight, false);
+  data->view.icon_layer = layer_create(icon_rect);
+  layer_set_update_proc(data->view.icon_layer, icon_layer_update_proc);
+  layer_add_child(window_layer, data->view.icon_layer);
 }
 
 static void window_unload(Window *window) {
-  text_layer_destroy(text_layer);
+  cue_sheet_data_t *data = window_get_user_data(window);
+
+  text_layer_destroy(data->view.distance_layer);
+  text_layer_destroy(data->view.description_layer);
+  layer_destroy(data->view.icon_layer);
 }
 
 static void init(void) {
@@ -110,7 +121,7 @@ static void init(void) {
   // Get ride and cue numbers (default to 0 if not saved)
   data->ride_number = persist_read_int(PERSIST_RIDE_NUMBER);
   data->cue_number = persist_read_int(PERSIST_CUE_NUMBER);
-  data->current_ride = ride_list[ride_number].ride;
+  data->ride_list = ride_list;
   window_stack_push(window, animated);
 }
 

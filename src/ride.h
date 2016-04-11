@@ -2,6 +2,7 @@
 
 typedef struct {
   float distance;
+  char direction;
   char cue[128];
 } ride_entry_t;
 

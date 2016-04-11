@@ -2,8 +2,8 @@
 #include "ride.h"
 
 ride_entry_t spring_classic_100[] = {
-  {0.0, "Start"},
-  {1.0, "Go Back"}
+  {0.0, 'L', "Start"},
+  {1.0, 'R', "Go Back"}
 };
 
 ride_t ride_list[] = {

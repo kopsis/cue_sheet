@@ -9,6 +9,10 @@ char* cue_sheet_data_get_description(cue_sheet_data_t* data) {
   return (data->ride_list[data->ride_number].ride->cue);
 }
 
+char cue_sheet_data_get_direction(cue_sheet_data_t* data) {
+  return (data->ride_list[data->ride_number].ride->direction);
+}
+
 void cue_sheet_data_next_cue(cue_sheet_data_t* data) {
   if (data->cue_number <= data->ride_list[data->ride_number].max_cue) {
     data->cue_number++;
