@@ -2,8 +2,8 @@
 #include "ride.h"
 #include "cue_sheet_data.h"
 
-static const int16_t MARGIN = 8;
-static const int16_t ICON_DIMENSIONS = 48;
+static const int16_t MARGIN = 4;
+static const int16_t ICON_DIMENSIONS = 40;
 
 static Window *window;
 
@@ -21,6 +21,8 @@ static void icon_layer_update_proc(Layer *layer, GContext *ctx) {
   cue_sheet_data_t *data = window_get_user_data(window);
   cue_sheet_view_t *view = &(data->view);
   graphics_context_set_antialiased(ctx, true);
+  graphics_context_set_stroke_color(ctx, GColorBlack);
+  graphics_context_set_fill_color(ctx, GColorBlack);
   gdraw_command_image_draw(ctx, view->icon, GPoint(0, 0));
 }
 
@@ -61,12 +63,15 @@ static void click_config_provider(void *context) {
 static GRect init_text_layer(Layer *parent_layer, TextLayer **text_layer, int16_t y, int16_t h, int16_t additional_right_margin, char *font_key) {
   // why "-1" (and then "+2")? because for this font we need to compensate for weird white-spacing
   const int16_t font_compensator = strcmp(font_key, FONT_KEY_LECO_38_BOLD_NUMBERS) == 0 ? 3 : 1;
+  int width = layer_get_bounds(parent_layer).size.w - (2 * MARGIN) + (2 * font_compensator) - additional_right_margin;
 
-  const GRect frame = GRect(MARGIN - font_compensator, y, layer_get_bounds(parent_layer).size.w - 2 * MARGIN + 2 * font_compensator - additional_right_margin, h);
+  const GRect frame = GRect(MARGIN - font_compensator, y, width, h);
 
   *text_layer = text_layer_create(frame);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "root width: %d", layer_get_bounds(parent_layer).size.w);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "width: %d", width);
   text_layer_set_background_color(*text_layer, GColorClear);
-  text_layer_set_text_color(*text_layer, PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
+  text_layer_set_text_color(*text_layer, PBL_IF_COLOR_ELSE(GColorBlack, GColorBlack));
   text_layer_set_font(*text_layer, fonts_get_system_font(font_key));
   layer_add_child(parent_layer, text_layer_get_layer(*text_layer));
   return frame;
@@ -82,19 +87,21 @@ static void window_load(Window *window) {
   const int16_t narrow_buffer = 5; // current whitespacing would trim 3-digit temperature otherwise
   const int16_t narrow = ICON_DIMENSIONS + 2 - narrow_buffer;
 
-  const int16_t distance_top = 49;
+  const int16_t distance_top = 30;
   init_text_layer(window_layer, &(data->view.distance_layer), distance_top, 40, narrow, FONT_KEY_LECO_38_BOLD_NUMBERS);
 
-  const int16_t description_top = 108;
+  const int16_t description_top = 30 + 40 + 10;
   const int16_t description_height = bounds.size.h - description_top;
   init_text_layer(window_layer, &(data->view.description_layer), description_top, description_height, 0, FONT_KEY_GOTHIC_24_BOLD);
   
   GRect icon_rect = GRect(0, 0, ICON_DIMENSIONS, ICON_DIMENSIONS);
-  GRect alignment_rect = GRect(0, distance_top + 10, bounds.size.w - MARGIN, 10);
+  GRect alignment_rect = GRect(0, distance_top, bounds.size.w - MARGIN, 10);
   grect_align(&icon_rect, &alignment_rect, GAlignTopRight, false);
+  data->view.icon = NULL;
   data->view.icon_layer = layer_create(icon_rect);
   layer_set_update_proc(data->view.icon_layer, icon_layer_update_proc);
   layer_add_child(window_layer, data->view.icon_layer);
+  cue_sheet_view_dump_to_log(data);
 }
 
 static void window_unload(Window *window) {

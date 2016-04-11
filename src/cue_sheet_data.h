@@ -14,7 +14,7 @@ typedef struct {
   cue_sheet_view_t view;
 } cue_sheet_data_t;
 
-float cue_sheet_data_get_distance(cue_sheet_data_t* data);
+int cue_sheet_data_get_distance(cue_sheet_data_t* data);
 char* cue_sheet_data_get_description(cue_sheet_data_t* data);
 char cue_sheet_data_get_direction(cue_sheet_data_t* data);
 void cue_sheet_data_next_cue(cue_sheet_data_t* data);

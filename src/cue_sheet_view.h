@@ -9,10 +9,10 @@ typedef struct {
   TextLayer *description_layer;
   Layer *icon_layer;
   GDrawCommandImage *icon;
+  char distance_text[8];
 } cue_sheet_view_t;
 
-//! calls model's .announce_changed or does nothing if NULL
-void cue_sheet_main_window_view_announce_changed(cue_sheet_view_t *model);
+void cue_sheet_view_dump_to_log(void* data);
 
 void cue_sheet_view_set_icon(cue_sheet_view_t *view, char direction);
 
