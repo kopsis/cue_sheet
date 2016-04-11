@@ -68,8 +68,8 @@ static GRect init_text_layer(Layer *parent_layer, TextLayer **text_layer, int16_
   const GRect frame = GRect(MARGIN - font_compensator, y, width, h);
 
   *text_layer = text_layer_create(frame);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "root width: %d", layer_get_bounds(parent_layer).size.w);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "width: %d", width);
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "root width: %d", layer_get_bounds(parent_layer).size.w);
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "width: %d", width);
   text_layer_set_background_color(*text_layer, GColorClear);
   text_layer_set_text_color(*text_layer, PBL_IF_COLOR_ELSE(GColorBlack, GColorBlack));
   text_layer_set_font(*text_layer, fonts_get_system_font(font_key));
@@ -101,7 +101,7 @@ static void window_load(Window *window) {
   data->view.icon_layer = layer_create(icon_rect);
   layer_set_update_proc(data->view.icon_layer, icon_layer_update_proc);
   layer_add_child(window_layer, data->view.icon_layer);
-  cue_sheet_view_dump_to_log(data);
+  cue_sheet_view_update(window, data);
 }
 
 static void window_unload(Window *window) {
@@ -110,6 +110,10 @@ static void window_unload(Window *window) {
   text_layer_destroy(data->view.distance_layer);
   text_layer_destroy(data->view.description_layer);
   layer_destroy(data->view.icon_layer);
+  if (data->view.icon != NULL) {
+    gdraw_command_image_destroy(data->view.icon);
+    data->view.icon = NULL;
+  }
 }
 
 static void init(void) {
@@ -133,6 +137,8 @@ static void init(void) {
 }
 
 static void deinit(void) {
+  void* data = window_get_user_data(window);
+  free(data);
   window_destroy(window);
 }
 

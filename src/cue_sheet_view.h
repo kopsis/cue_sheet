@@ -3,8 +3,6 @@
 #include <pebble.h>
 
 typedef struct {
-  TextLayer *fake_statusbar;
-  Layer *horizontal_ruler_layer;
   TextLayer *distance_layer;
   TextLayer *description_layer;
   Layer *icon_layer;

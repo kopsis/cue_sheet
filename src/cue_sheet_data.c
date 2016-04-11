@@ -15,11 +15,9 @@ char cue_sheet_data_get_direction(cue_sheet_data_t* data) {
 
 void cue_sheet_data_next_cue(cue_sheet_data_t* data) {
   int max_cue = data->ride_list[data->ride_number].max_cue;
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "max_cue: %d", max_cue);
   if (data->cue_number < max_cue) {
     data->cue_number++;
   }
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "cue_number: %d", data->cue_number);
   persist_write_int(PERSIST_CUE_NUMBER, data->cue_number);
 }
 
@@ -27,7 +25,6 @@ void cue_sheet_data_prev_cue(cue_sheet_data_t* data) {
   if (data->cue_number > 0) {
     data->cue_number--;
   }
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "cue_number: %d", data->cue_number);
   persist_write_int(PERSIST_CUE_NUMBER, data->cue_number);
 }
 
